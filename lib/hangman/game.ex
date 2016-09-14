@@ -144,19 +144,17 @@ Here's this module being exercised from an iex session:
             letters: [],
             guesses: 0,
             remaining_letters: 0,
-            user_word: []
   )
 
-  def to_underscore(x), do: String.replace x, ~r/./, "_"
+  
 
   @spec new_game :: state
   def new_game do
     word = Hangman.Dictionary.random_word
     %Hangman.Game{word: word,
                   remaining_letters: String.codepoints(word)
-                                 |> Enum.uniq
-                                 |> Enum.count,
-                  user_word: to_underscore(word)
+                                     |> Enum.uniq
+                                     |> Enum.count
                  }
   end
 
@@ -169,8 +167,9 @@ Here's this module being exercised from an iex session:
   @spec new_game(binary) :: state
   def new_game(word) do
     %Hangman.Game{word: word,
-                  user_word: to_underscore(word)
-                 }
+                  remaining_letters: String.codepoints(word)
+                                     |> Enum.uniq
+                                     |> Enum.count}
   end
 
 
@@ -265,10 +264,11 @@ Here's this module being exercised from an iex session:
     if reveal do
        state.word
     else
-       state.user_word
+       String.replace(state.word, ~r/[^#{state.letters}]/, "_")
     end
       |> String.replace(~r/(.)/, "\\g{1} ")
       |> String.trim
+
   end
 
   ###########################
