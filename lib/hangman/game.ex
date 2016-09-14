@@ -143,16 +143,16 @@ Here's this module being exercised from an iex session:
   defstruct(word: [],
             letters: [],
             guesses: 0,
-            remaining: 0
+            remaining_letters: 0
   )
 
   @spec new_game :: state
   def new_game do
     word = Hangman.Dictionary.random_word
     %Hangman.Game{word: word,
-                  remaining: String.codepoints(word)
-                             |> Enum.uniq
-                             |> Enum.count}
+                  remaining_letters: String.codepoints(word)
+                                 |> Enum.uniq
+                                 |> Enum.count}
   end
 
 
@@ -191,8 +191,8 @@ Here's this module being exercised from an iex session:
   def make_move(state, guess) do
   state = %{state | letters: [guess | state.letters]}
     if String.contains?(state.word, to_string guess) do
-      state = %{state | remaining: state.remaining - 1}
-      if state.remaining == 0 do
+      state = %{state | remaining_letters: state.remaining_letters - 1}
+      if state.remaining_letters == 0 do
         {state, :won, guess}
       else
         {state, :good_guess, guess}
@@ -228,6 +228,7 @@ Here's this module being exercised from an iex session:
 
   @spec letters_used_so_far(state) :: [ binary ]
   def letters_used_so_far(state) do
+    state.letters
   end
 
   @doc """
@@ -240,6 +241,7 @@ Here's this module being exercised from an iex session:
 
   @spec turns_left(state) :: integer
   def turns_left(state) do
+    10 - state.guesses
   end
 
   @doc """
@@ -253,6 +255,15 @@ Here's this module being exercised from an iex session:
 
   @spec word_as_string(state, boolean) :: binary
   def word_as_string(state, reveal \\ false) do
+    if reveal do
+       state.word
+       |> String.replace(~r/(.)/, "\\g{1} ")
+       |> String.trim
+    else
+       Stream.repeatedly(fn -> "_ " end)
+       |> Enum.take(String.length state.word)
+       |> to_string
+    end
   end
 
   ###########################
