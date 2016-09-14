@@ -107,7 +107,7 @@ Here's this module being exercised from an iex session:
 
     iex(13)> { game, state, guess } = G.make_move(game, "b")
     . . .
-    iex(14)> state                                          
+    iex(14)> state
     :bad_guess
 
     iex(15)> { game, state, guess } = G.make_move(game, "f")
@@ -140,8 +140,19 @@ Here's this module being exercised from an iex session:
   find a random word, and then let the user make guesses.
   """
 
+  defstruct(word: [],
+            letters: [],
+            guesses: 0,
+            remaining: 0
+  )
+
   @spec new_game :: state
   def new_game do
+    word = Hangman.Dictionary.random_word
+    %Hangman.Game{word: word,
+                  remaining: String.codepoints(word)
+                             |> Enum.uniq
+                             |> Enum.count}
   end
 
 
@@ -152,6 +163,7 @@ Here's this module being exercised from an iex session:
   """
   @spec new_game(binary) :: state
   def new_game(word) do
+    %Hangman.Game{word: word}
   end
 
 
@@ -177,6 +189,22 @@ Here's this module being exercised from an iex session:
 
   @spec make_move(state, ch) :: { state, atom, optional_ch }
   def make_move(state, guess) do
+  state = %{state | letters: [guess | state.letters]}
+    if String.contains?(state.word, to_string guess) do
+      state = %{state | remaining: state.remaining - 1}
+      if state.remaining == 0 do
+        {state, :won, guess}
+      else
+        {state, :good_guess, guess}
+      end
+    else
+      state = %{state | guesses: state.guesses + 1}
+      if state.guesses == 10 do
+        {state, :lost, guess}
+      else
+        {state, :bad_guess, guess}
+      end
+    end
   end
 
 
@@ -187,6 +215,7 @@ Here's this module being exercised from an iex session:
   """
   @spec word_length(state) :: integer
   def word_length(%{ word: word }) do
+    String.length word
   end
 
   @doc """
