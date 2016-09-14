@@ -151,9 +151,7 @@ Here's this module being exercised from an iex session:
   def new_game do
     word = Hangman.Dictionary.random_word
     %Hangman.Game{word: word,
-                  remaining_letters: String.codepoints(word)
-                                     |> Enum.uniq
-                                     |> Enum.count
+                  remaining_letters: num_unique_letters word
                  }
   end
 
@@ -167,9 +165,8 @@ Here's this module being exercised from an iex session:
   @spec new_game(binary) :: state
   def new_game(word) do
     %Hangman.Game{word: word,
-                  remaining_letters: String.codepoints(word)
-                                     |> Enum.uniq
-                                     |> Enum.count}
+                  remaining_letters: num_unique_letters word
+                 }
   end
 
 
@@ -276,5 +273,11 @@ Here's this module being exercised from an iex session:
   ###########################
 
   # Your private functions go here
+
+  defp num_unique_letters(x) do
+      String.codepoints(x)
+      |> Enum.uniq
+      |> Enum.count
+  end
 
  end
