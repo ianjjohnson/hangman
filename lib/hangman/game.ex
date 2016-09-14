@@ -140,11 +140,14 @@ Here's this module being exercised from an iex session:
   find a random word, and then let the user make guesses.
   """
 
-  defstruct(word: [],
+  defstruct(word: "",
             letters: [],
             guesses: 0,
-            remaining_letters: 0
+            remaining_letters: 0,
+            user_word: []
   )
+
+  def to_underscore(x), do: String.replace x, ~r/./, "_"
 
   @spec new_game :: state
   def new_game do
@@ -152,7 +155,9 @@ Here's this module being exercised from an iex session:
     %Hangman.Game{word: word,
                   remaining_letters: String.codepoints(word)
                                  |> Enum.uniq
-                                 |> Enum.count}
+                                 |> Enum.count,
+                  user_word: to_underscore(word)
+                 }
   end
 
 
@@ -163,7 +168,9 @@ Here's this module being exercised from an iex session:
   """
   @spec new_game(binary) :: state
   def new_game(word) do
-    %Hangman.Game{word: word}
+    %Hangman.Game{word: word,
+                  user_word: to_underscore(word)
+                 }
   end
 
 
@@ -189,7 +196,7 @@ Here's this module being exercised from an iex session:
 
   @spec make_move(state, ch) :: { state, atom, optional_ch }
   def make_move(state, guess) do
-  state = %{state | letters: [guess | state.letters]}
+  state = %{state | letters: [Kernel.to_string(guess) | state.letters]}
     if String.contains?(state.word, to_string guess) do
       state = %{state | remaining_letters: state.remaining_letters - 1}
       if state.remaining_letters == 0 do
@@ -257,13 +264,11 @@ Here's this module being exercised from an iex session:
   def word_as_string(state, reveal \\ false) do
     if reveal do
        state.word
-       |> String.replace(~r/(.)/, "\\g{1} ")
-       |> String.trim
     else
-       Stream.repeatedly(fn -> "_ " end)
-       |> Enum.take(String.length state.word)
-       |> to_string
+       state.user_word
     end
+      |> String.replace(~r/(.)/, "\\g{1} ")
+      |> String.trim
   end
 
   ###########################
