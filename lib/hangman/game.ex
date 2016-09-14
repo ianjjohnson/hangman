@@ -129,7 +129,14 @@ Here's this module being exercised from an iex session:
     "f r e e z e"
 
 
+
   """
+
+  defstruct(word: "",
+            letters: [],
+            guesses: 0,
+            remaining_letters: 0,
+  )
 
   @type state :: map
   @type ch    :: binary
@@ -140,14 +147,6 @@ Here's this module being exercised from an iex session:
   find a random word, and then let the user make guesses.
   """
 
-  defstruct(word: "",
-            letters: [],
-            guesses: 0,
-            remaining_letters: 0,
-  )
-
-  
-
   @spec new_game :: state
   def new_game do
     word = Hangman.Dictionary.random_word
@@ -157,6 +156,7 @@ Here's this module being exercised from an iex session:
                                      |> Enum.count
                  }
   end
+
 
 
   @doc """
@@ -264,7 +264,7 @@ Here's this module being exercised from an iex session:
     if reveal do
        state.word
     else
-       String.replace(state.word, ~r/[^#{state.letters}]/, "_")
+       String.replace(state.word, ~r/[^#{[" " | state.letters]}]/, "_")
     end
       |> String.replace(~r/(.)/, "\\g{1} ")
       |> String.trim
