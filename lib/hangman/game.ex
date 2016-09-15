@@ -192,22 +192,16 @@ Here's this module being exercised from an iex session:
 
   @spec make_move(state, ch) :: { state, atom, optional_ch }
   def make_move(state, guess) do
+
   state = %{state | letters: [Kernel.to_string(guess) | state.letters]}
+
+    #Check if the guess was good and process state accordingly
     if String.contains?(state.word, to_string guess) do
-      state = %{state | remaining_letters: state.remaining_letters - 1}
-      if state.remaining_letters == 0 do
-        {state, :won, guess}
-      else
-        {state, :good_guess, guess}
-      end
+      process_good_move state, guess
     else
-      state = %{state | guesses: state.guesses + 1}
-      if state.guesses == 10 do
-        {state, :lost, guess}
-      else
-        {state, :bad_guess, guess}
-      end
+      process_bad_move state, guess
     end
+
   end
 
 
@@ -258,11 +252,16 @@ Here's this module being exercised from an iex session:
 
   @spec word_as_string(state, boolean) :: binary
   def word_as_string(state, reveal \\ false) do
+
+    #Select either the full word or the semi-redacted word
     if reveal do
        state.word
     else
        String.replace(state.word, ~r/[^#{[" " | state.letters]}]/, "_")
     end
+
+      #Pipe the result of the above expression into regex to add spaces
+      #between chars and trim the final output
       |> String.replace(~r/(.)/, "\\g{1} ")
       |> String.trim
 
@@ -278,6 +277,32 @@ Here's this module being exercised from an iex session:
       String.codepoints(x)
       |> Enum.uniq
       |> Enum.count
+  end
+
+  defp process_good_move(state, guess) do
+
+    state = %{state | remaining_letters: state.remaining_letters - 1}
+
+    #Check for win condition
+    if state.remaining_letters == 0 do
+      {state, :won, nil}
+    else
+      {state, :good_guess, guess}
+    end
+
+  end
+
+  defp process_bad_move(state, guess) do
+
+    state = %{state | guesses: state.guesses + 1}
+
+    #Check for loss condition
+    if state.guesses == 10 do
+      {state, :lost, nil}
+    else
+      {state, :bad_guess, guess}
+    end
+
   end
 
  end
