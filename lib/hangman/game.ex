@@ -193,14 +193,8 @@ Here's this module being exercised from an iex session:
   @spec make_move(state, ch) :: { state, atom, optional_ch }
   def make_move(state, guess) do
 
-  state = %{state | letters: [Kernel.to_string(guess) | state.letters]}
-
-    #Check if the guess was good and process state accordingly
-    if String.contains?(state.word, to_string guess) do
-      process_good_move state, guess
-    else
-      process_bad_move state, guess
-    end
+    state = %{state | letters: [Kernel.to_string(guess) | state.letters]}
+    process_move(state, guess, String.contains?(state.word, to_string guess))
 
   end
 
@@ -253,17 +247,10 @@ Here's this module being exercised from an iex session:
   @spec word_as_string(state, boolean) :: binary
   def word_as_string(state, reveal \\ false) do
 
-    #Select either the full word or the semi-redacted word
-    if reveal do
-       state.word
-    else
-       String.replace(state.word, ~r/[^#{[" " | state.letters]}]/, "_")
-    end
-
-      #Pipe the result of the above expression into regex to add spaces
-      #between chars and trim the final output
-      |> String.replace(~r/(.)/, "\\g{1} ")
-      |> String.trim
+    state
+    |> word_for_user(reveal)
+    |> String.replace(~r/(.)/, "\\g{1} ")
+    |> String.trim
 
   end
 
@@ -273,36 +260,28 @@ Here's this module being exercised from an iex session:
 
   # Your private functions go here
 
+  defp word_for_user(state, true),  do: state.word
+  defp word_for_user(state, false), do: String.replace(state.word, ~r/[^#{[" " | state.letters]}]/, "_")
+
   defp num_unique_letters(x) do
       String.codepoints(x)
       |> Enum.uniq
       |> Enum.count
   end
 
-  defp process_good_move(state, guess) do
+  defp generate_reponse(state, _guess, true , true ), do: {state, :won       , nil  }
+  defp generate_reponse(state, _guess, false, true ), do: {state, :lost      , nil  }
+  defp generate_reponse(state, guess , false, false), do: {state, :bad_guess , guess}
+  defp generate_reponse(state, guess , true , false), do: {state, :good_guess, guess}
 
+  defp process_move(state, guess, true) do
     state = %{state | remaining_letters: state.remaining_letters - 1}
-
-    #Check for win condition
-    if state.remaining_letters == 0 do
-      {state, :won, nil}
-    else
-      {state, :good_guess, guess}
-    end
-
+    generate_reponse state, guess, true, state.remaining_letters == 0
   end
 
-  defp process_bad_move(state, guess) do
-
+  defp process_move(state, guess, false) do
     state = %{state | guesses: state.guesses + 1}
-
-    #Check for loss condition
-    if state.guesses == 10 do
-      {state, :lost, nil}
-    else
-      {state, :bad_guess, guess}
-    end
-
+    generate_reponse state, guess, false, state.guesses == 10
   end
 
  end
